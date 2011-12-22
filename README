@@ -1,0 +1,39 @@
+;######################################################################
+;#
+;# romkan.pl: romaji-to-kana convertion subroutine for Perl
+;#
+;# Copyright (c) Kazumasa Utashiro
+;#
+;# Original: Jan 12 1993
+;; my $rcsid = q$Id: romkan.pl,v 2.1 2011/12/22 06:48:55 utashiro Exp $;
+;#
+;######################################################################
+;#
+;# SYNOPSIS
+;#
+;#	$kana = &romkan($romaji [, DUMMY [, KATAKANA]] );
+;#
+;# DESCRIPTION
+;#
+;#	Subroutine &romkan returns KANA string expressed by the first
+;#	argument.  It returns undef when translation was failed.
+;#
+;#	Second argument is obsolete now.  It remains for backward
+;#	compatibility.  Put undef here when using third argument.
+;#
+;#	If the third argument is supplied and its value is
+;#	true, return string is expressed by KATAKANA rather
+;#	than HIRAGANA which is default.  Use undef for
+;#	second argument if you don't want to specify the code.
+;#
+;######################################################################
+;#
+;# SAMPLE:
+;#
+;#	require('romkan.pl');
+;#	while (<>) {
+;#	    s/([\w\-\']+)/&romkan($1)||$1/ge unless 1 .. /^$/;
+;#	    print;
+;#	}
+;#
+;######################################################################
