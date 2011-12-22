@@ -1,32 +1,31 @@
-#!/usr/local/bin/perl -s
+#!/usr/bin/perl -s
+
+use warnings;
+use strict;
+
 package romkan;
 ;######################################################################
 ;#
 ;# romkan.pl: romaji-to-kana convertion subroutine for Perl
 ;#
-;# Copyright (c) 2001 Kazumasa Utashiro <utashiro@srekcah.org>
-;# Copyright (c) 1995,1996,1998,1999 Kazumasa Utashiro
-;# Internet Initiative Japan Inc.
-;#
-;# Copyright (c) 1993 Kazumasa Utashiro
-;# Software Research Associates, Inc.
+;# Copyright (c) Kazumasa Utashiro
 ;#
 ;# Original: Jan 12 1993
-;; $rcsid = q$Id: romkan.pl,v 1.9 2001/06/25 11:09:01 utashiro Exp $;
+;; my $rcsid = q$Id: romkan.pl,v 2.1 2011/12/22 06:48:55 utashiro Exp $;
 ;#
 ;######################################################################
 ;#
 ;# SYNOPSIS
 ;#
-;#	$kana = &romkan($roma [, CODE [, KATAKANA]] );
+;#	$kana = &romkan($romaji [, DUMMY [, KATAKANA]] );
 ;#
 ;# DESCRIPTION
 ;#
 ;#	Subroutine &romkan returns KANA string expressed by the first
 ;#	argument.  It returns undef when translation was failed.
 ;#
-;#	Second argument specifies the encoding of return string.  It
-;#	is encoded in 'euc' by default.  Use 'euc', 'sjis' or 'jis'.
+;#	Second argument is obsolete now.  It remains for backward
+;#	compatibility.  Put undef here when using third argument.
 ;#
 ;#	If the third argument is supplied and its value is
 ;#	true, return string is expressed by KATAKANA rather
@@ -45,93 +44,94 @@ package romkan;
 ;#
 ;######################################################################
 
-require('jcode.pl');
+use utf8;
 
-$pcode = 'euc';
+my(%romkan, @romkan);
+%romkan = @romkan = qw(
+a	ã‚	i	ã„	u	ã†	e	ãˆ	o	ãŠ
+ka	ã‹	ki	ã	ku	ã	ke	ã‘	ko	ã“
+ga	ãŒ	gi	ã	gu	ã	ge	ã’	go	ã”
+sa	ã•	si	ã—	su	ã™	se	ã›	so	ã
+za	ã–	zi	ã˜	zu	ãš	ze	ãœ	zo	ã
+ta	ãŸ	ti	ã¡	tu	ã¤	te	ã¦	to	ã¨
+tsa	ã¤ã	tsi	ã¤ãƒ	tsu	ã¤	tse	ã¤ã‡	tso	ã¤ã‰
+da	ã 	di	ã¢	du	ã¥	de	ã§	do	ã©
+na	ãª	ni	ã«	nu	ã¬	ne	ã­	no	ã®
+ha	ã¯	hi	ã²	hu	ãµ	he	ã¸	ho	ã»
+fa	ãµã	fi	ãµãƒ	fu	ãµ	fe	ãµã‡	fo	ãµã‰
+pa	ã±	pi	ã´	pu	ã·	pe	ãº	po	ã½
+ba	ã°	bi	ã³	bu	ã¶	be	ã¹	bo	ã¼
+ma	ã¾	mi	ã¿	mu	ã‚€	me	ã‚	mo	ã‚‚
+ya	ã‚„			yu	ã‚†			yo	ã‚ˆ
+ra	ã‚‰	ri	ã‚Š	ru	ã‚‹	re	ã‚Œ	ro	ã‚
+wa	ã‚	wi	ã‚			we	ã‚‘	wo	ã‚’
+kya	ãã‚ƒ	kyi	ããƒ	kyu	ãã‚…	kye	ãã‡	kyo	ãã‚‡
+gya	ãã‚ƒ	gyi	ããƒ	gyu	ãã‚…	gye	ãã‡	gyo	ãã‚‡
+sha	ã—ã‚ƒ	shi	ã—	shu	ã—ã‚…	she	ã—ã‡	sho	ã—ã‚‡
+zya	ã˜ã‚ƒ	zyi	ã˜ãƒ	zyu	ã˜ã‚…	zye	ã˜ã‡	zyo	ã˜ã‚‡
+ja	ã˜ã‚ƒ	ji	ã˜	ju	ã˜ã‚…	je	ã˜ã‡	jo	ã˜ã‚‡
+jya	ã˜ã‚ƒ	jyi	ã˜ãƒ	jyu	ã˜ã‚…	jye	ã˜ã‡	jyo	ã˜ã‚‡
+tya	ã¡ã‚ƒ	tyi	ã¡ãƒ	tyu	ã¡ã‚…	tye	ã¡ã‡	tyo	ã¡ã‚‡
+cha	ã¡ã‚ƒ	chi	ã¡	chu	ã¡ã‚…	che	ã¡ã‡	cho	ã¡ã‚‡
+dya	ã¢ã‚ƒ	dyi	ã¢ãƒ	dyu	ã¢ã‚…	dye	ã¢ã‡	dyo	ã¢ã‚‡
+tha	ã¦ã‚ƒ	thi	ã¦ãƒ	thu	ã¦ã‚…	the	ã¦ã‡	tho	ã¦ã‚‡
+dha	ã§ã‚ƒ	dhi	ã§ãƒ	dhu	ã§ã‚…	dhe	ã§ã‡	dho	ã§ã‚‡
+nya	ã«ã‚ƒ	nyi	ã«ãƒ	nyu	ã«ã‚…	nye	ã«ã‡	nyo	ã«ã‚‡
+hya	ã²ã‚ƒ	hyi	ã²ãƒ	hyu	ã²ã‚…	hye	ã²ã‡	hyo	ã²ã‚‡
+pya	ã´ã‚ƒ	pyi	ã´ãƒ	pyu	ã´ã‚…	pye	ã´ã‡	pyo	ã´ã‚‡
+bya	ã³ã‚ƒ	byi	ã³ãƒ	byu	ã³ã‚…	bye	ã³ã‡	byo	ã³ã‚‡
+mya	ã¿ã‚ƒ	myi	ã¿ãƒ	myu	ã¿ã‚…	mye	ã¿ã‡	myo	ã¿ã‚‡
+rya	ã‚Šã‚ƒ	ryi	ã‚Šãƒ	ryu	ã‚Šã‚…	rye	ã‚Šã‡	ryo	ã‚Šã‚‡
+xa	ã	xi	ãƒ	xu	ã…	xe	ã‡	xo	ã‰
+xwa	ã‚	xtsu	ã£	xtu	ã£
+xya	ã‚ƒ			xyu	ã‚…			xyo	ã‚‡
+n'	ã‚“	n	ã‚“
+-	ãƒ¼
+);
 
-$romkan_table = <<'__TABLE_END__' unless $romkan_table;
-a	¤¢	i	¤¤	u	¤¦	e	¤¨	o	¤ª
-ka	¤«	ki	¤­	ku	¤¯	ke	¤±	ko	¤³
-ga	¤¬	gi	¤®	gu	¤°	ge	¤²	go	¤´
-sa	¤µ	si	¤·	su	¤¹	se	¤»	so	¤½
-za	¤¶	zi	¤¸	zu	¤º	ze	¤¼	zo	¤¾
-ta	¤¿	ti	¤Á	tu	¤Ä	te	¤Æ	to	¤È
-tsa	¤Ä¤¡	tsi	¤Ä¤£	tsu	¤Ä	tse	¤Ä¤§	tso	¤Ä¤©
-da	¤À	di	¤Â	du	¤Å	de	¤Ç	do	¤É
-na	¤Ê	ni	¤Ë	nu	¤Ì	ne	¤Í	no	¤Î
-ha	¤Ï	hi	¤Ò	hu	¤Õ	he	¤Ø	ho	¤Û
-fa	¤Õ¤¡	fi	¤Õ¤£	fu	¤Õ	fe	¤Õ¤§	fo	¤Õ¤©
-pa	¤Ñ	pi	¤Ô	pu	¤×	pe	¤Ú	po	¤İ
-ba	¤Ğ	bi	¤Ó	bu	¤Ö	be	¤Ù	bo	¤Ü
-ma	¤Ş	mi	¤ß	mu	¤à	me	¤á	mo	¤â
-ya	¤ä			yu	¤æ			yo	¤è
-ra	¤é	ri	¤ê	ru	¤ë	re	¤ì	ro	¤í
-wa	¤ï	wi	¤ğ			we	¤ñ	wo	¤ò
-kya	¤­¤ã	kyi	¤­¤£	kyu	¤­¤å	kye	¤­¤§	kyo	¤­¤ç
-gya	¤®¤ã	gyi	¤®¤£	gyu	¤®¤å	gye	¤®¤§	gyo	¤®¤ç
-sha	¤·¤ã	shi	¤·	shu	¤·¤å	she	¤·¤§	sho	¤·¤ç
-zya	¤¸¤ã	zyi	¤¸¤£	zyu	¤¸¤å	zye	¤¸¤§	zyo	¤¸¤ç
-ja	¤¸¤ã	ji	¤¸	ju	¤¸¤å	je	¤¸¤§	jo	¤¸¤ç
-jya	¤¸¤ã	jyi	¤¸¤£	jyu	¤¸¤å	jye	¤¸¤§	jyo	¤¸¤ç
-tya	¤Á¤ã	tyi	¤Á¤£	tyu	¤Á¤å	tye	¤Á¤§	tyo	¤Á¤ç
-cha	¤Á¤ã	chi	¤Á	chu	¤Á¤å	che	¤Á¤§	cho	¤Á¤ç
-dya	¤Â¤ã	dyi	¤Â¤£	dyu	¤Â¤å	dye	¤Â¤§	dyo	¤Â¤ç
-tha	¤Æ¤ã	thi	¤Æ¤£	thu	¤Æ¤å	the	¤Æ¤§	tho	¤Æ¤ç
-dha	¤Ç¤ã	dhi	¤Ç¤£	dhu	¤Ç¤å	dhe	¤Ç¤§	dho	¤Ç¤ç
-nya	¤Ë¤ã	nyi	¤Ë¤£	nyu	¤Ë¤å	nye	¤Ë¤§	nyo	¤Ë¤ç
-hya	¤Ò¤ã	hyi	¤Ò¤£	hyu	¤Ò¤å	hye	¤Ò¤§	hyo	¤Ò¤ç
-pya	¤Ô¤ã	pyi	¤Ô¤£	pyu	¤Ô¤å	pye	¤Ô¤§	pyo	¤Ô¤ç
-bya	¤Ó¤ã	byi	¤Ó¤£	byu	¤Ó¤å	bye	¤Ó¤§	byo	¤Ó¤ç
-mya	¤ß¤ã	myi	¤ß¤£	myu	¤ß¤å	mye	¤ß¤§	myo	¤ß¤ç
-rya	¤ê¤ã	ryi	¤ê¤£	ryu	¤ê¤å	rye	¤ê¤§	ryo	¤ê¤ç
-xa	¤¡	xi	¤£	xu	¤¥	xe	¤§	xo	¤©
-xwa	¤î	xtsu	¤Ã	xtu	¤Ã
-xya	¤ã			xyu	¤å			xyo	¤ç
-n'	¤ó	n	¤ó
--	¡¼
-__TABLE_END__
-
-&jcode'convert(*romkan_table, $pcode);
-%romkan = @romkan = split(/\s+/, $romkan_table);
-$consonants = 'ckgszjtdhfpbmyrw';
+my $consonants = 'ckgszjtdhfpbmyrw';
 for ($consonants =~ /./g) { $romkan{"$_$_"} = $romkan{'xtsu'}; }
 for (0..9, "'") { $romkan{$_} = $_; }
 
-$i = 0;
+our $sub_romkan;
+my $i = 0;
+my @rom = grep(++$i % 2, @romkan);
+
 ;;; eval($sub_romkan = q%
-sub main'romkan {
-    local($_, $code, $katakana) = @_;
-    local($kana) = '';
-    while (length) {
+sub main::romkan {
+    local($_) = shift;
+    my($code, $katakana) = @_;
+    my $kana = '';
+    while (length($_)) {
 	if (0
-% .	join('', grep(++$i%2 && ($_ = "\t    || s/^($_)//i\n"), @romkan)) . q%
+% .	    join('', map("\t    || s/^($_)//i\n", @rom)) . q%
 	    || s/^([\d\'])//
 	    || s/^(([%.$consonants.q%])\2)/$2/i
 	) {
-	    $kana .= $romkan{"\L$1"};
+	    $kana .= $romkan{lc($1)};
 	} else {
 	    last;
 	}
     }
-    return undef if length;
-    $kana =~ s/\244(.)/\245$1/g if $katakana;
-    &jcode'convert(*kana, $code, $pcode) if $code && $code ne $pcode;
+    return undef if length($_);
+    $kana =~ tr/ã-ã‚“ã‚”/ã‚¡-ãƒ³ãƒ´/ if $katakana;
     $kana;
 }
 %);
 
+use Carp;
+croak $@ if $@;
+
 ;######################################################################
 if (__FILE__ eq $0) {	# test main
     package main;
-
-    print $romkan'sub_romkan if $debug;
-
+    our($debug, $katakana);
+    binmode STDOUT, ':utf8';
+    print $romkan::sub_romkan if $debug;
     $/ = '' unless -t STDIN;
-    $code = $jis ? 'jis' : $euc ? 'euc' : $sjis ? 'sjis' : undef;
-
     while (<>) {
 	print unless -t STDIN;
-	s/([\w\-\']+)/&romkan($1,$code,$katakana)||$1/ge;
+	s/([\w\-\']+)/&romkan($1,undef,$katakana)||$1/ge;
 	print;
     }
 }
