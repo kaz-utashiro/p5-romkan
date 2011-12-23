@@ -1,4 +1,4 @@
-#!/usr/bin/perl -s -Cio
+#!/usr/bin/perl -s -CSDA
 
 use warnings;
 use strict;
@@ -11,7 +11,7 @@ package romkan;
 ;# Copyright (c) Kazumasa Utashiro
 ;#
 ;# Original: Jan 12 1993
-;; my $rcsid = q$Id: romkan.pl,v 2.2 2011/12/23 01:13:17 utashiro Exp $;
+;; my $rcsid = q$Id: romkan.pl,v 2.3 2011/12/23 01:48:41 utashiro Exp $;
 ;#
 ;######################################################################
 ;#
