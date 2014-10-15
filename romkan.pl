@@ -68,6 +68,7 @@ wa	わ	wi	ゐ			we	ゑ	wo	を
 kya	きゃ	kyi	きぃ	kyu	きゅ	kye	きぇ	kyo	きょ
 gya	ぎゃ	gyi	ぎぃ	gyu	ぎゅ	gye	ぎぇ	gyo	ぎょ
 sha	しゃ	shi	し	shu	しゅ	she	しぇ	sho	しょ
+sya	しゃ	syi	しぃ	syu	しゅ	sye	しぇ	syo	しょ
 zya	じゃ	zyi	じぃ	zyu	じゅ	zye	じぇ	zyo	じょ
 ja	じゃ	ji	じ	ju	じゅ	je	じぇ	jo	じょ
 jya	じゃ	jyi	じぃ	jyu	じゅ	jye	じぇ	jyo	じょ
@@ -82,6 +83,7 @@ pya	ぴゃ	pyi	ぴぃ	pyu	ぴゅ	pye	ぴぇ	pyo	ぴょ
 bya	びゃ	byi	びぃ	byu	びゅ	bye	びぇ	byo	びょ
 mya	みゃ	myi	みぃ	myu	みゅ	mye	みぇ	myo	みょ
 rya	りゃ	ryi	りぃ	ryu	りゅ	rye	りぇ	ryo	りょ
+va	ゔぁ	vi	ゔぃ	vu	ゔ	ve	ゔぇ	vo	ゔぉ
 xa	ぁ	xi	ぃ	xu	ぅ	xe	ぇ	xo	ぉ
 xwa	ゎ	xtsu	っ	xtu	っ
 xya	ゃ			xyu	ゅ			xyo	ょ
