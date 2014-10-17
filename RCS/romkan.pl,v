@@ -1,0 +1,644 @@
+head	2.4;
+access;
+symbols;
+locks;
+comment	@% @;
+
+
+2.4
+date	2014.10.17.02.17.52;	author utashiro;	state Exp;
+branches;
+next	2.3;
+
+2.3
+date	2011.12.23.01.48.41;	author utashiro;	state Exp;
+branches;
+next	2.2;
+
+2.2
+date	2011.12.23.01.13.17;	author utashiro;	state Exp;
+branches;
+next	2.1;
+
+2.1
+date	2011.12.22.06.48.55;	author utashiro;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	2001.06.25.11.09.01;	author utashiro;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	99.12.03.11.33.46;	author utashiro;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	98.04.23.12.13.56;	author utashiro;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	96.05.22.15.41.28;	author utashiro;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.05.22.04.18.21;	author utashiro;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.05.03.16.28.13;	author utashiro;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.05.03.16.24.37;	author utashiro;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.02.17.06.03.22;	author utashiro;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.01.13.07.19.33;	author utashiro;	state Exp;
+branches;
+next	;
+
+
+desc
+@romkan.pl
+@
+
+
+2.4
+log
+@Change to use Getopt::Long and modify options.
+@
+text
+@#!/usr/bin/perl -CSDA
+
+use warnings;
+use strict;
+
+package romkan;
+;######################################################################
+;#
+;# romkan.pl: romaji-to-kana convertion subroutine for Perl
+;#
+;# Copyright (c) Kazumasa Utashiro
+;#
+;# Original: Jan 12 1993
+;; my $rcsid = q$Id: romkan.pl,v 2.3 2011/12/23 01:48:41 utashiro Exp $;
+;#
+;######################################################################
+;#
+;# SYNOPSIS
+;#
+;#	$kana = &romkan($romaji [, DUMMY [, KATAKANA]] );
+;#
+;# DESCRIPTION
+;#
+;#	Subroutine &romkan returns KANA string expressed by the first
+;#	argument.  It returns undef when translation was failed.
+;#
+;#	Second argument is obsolete now.  It remains for backward
+;#	compatibility.  Put undef here when using third argument.
+;#
+;#	If the third argument is supplied and its value is
+;#	true, return string is expressed by KATAKANA rather
+;#	than HIRAGANA which is default.  Use undef for
+;#	second argument if you don't want to specify the code.
+;#
+;######################################################################
+;#
+;# SAMPLE:
+;#
+;#	require('romkan.pl');
+;#	while (<>) {
+;#	    s/([\w\-\']+)/&romkan($1)||$1/ge unless 1 .. /^$/;
+;#	    print;
+;#	}
+;#
+;######################################################################
+
+use utf8;
+
+my(%romkan, @@romkan);
+%romkan = @@romkan = qw(
+a	ã‚	i	ã„	u	ã†	e	ãˆ	o	ãŠ
+ka	ã‹	ki	ã	ku	ã	ke	ã‘	ko	ã“
+ga	ãŒ	gi	ãŽ	gu	ã	ge	ã’	go	ã”
+sa	ã•	si	ã—	su	ã™	se	ã›	so	ã
+za	ã–	zi	ã˜	zu	ãš	ze	ãœ	zo	ãž
+ta	ãŸ	ti	ã¡	tu	ã¤	te	ã¦	to	ã¨
+tsa	ã¤ã	tsi	ã¤ãƒ	tsu	ã¤	tse	ã¤ã‡	tso	ã¤ã‰
+da	ã 	di	ã¢	du	ã¥	de	ã§	do	ã©
+na	ãª	ni	ã«	nu	ã¬	ne	ã­	no	ã®
+ha	ã¯	hi	ã²	hu	ãµ	he	ã¸	ho	ã»
+fa	ãµã	fi	ãµãƒ	fu	ãµ	fe	ãµã‡	fo	ãµã‰
+pa	ã±	pi	ã´	pu	ã·	pe	ãº	po	ã½
+ba	ã°	bi	ã³	bu	ã¶	be	ã¹	bo	ã¼
+ma	ã¾	mi	ã¿	mu	ã‚€	me	ã‚	mo	ã‚‚
+ya	ã‚„			yu	ã‚†			yo	ã‚ˆ
+ra	ã‚‰	ri	ã‚Š	ru	ã‚‹	re	ã‚Œ	ro	ã‚
+wa	ã‚	wi	ã‚			we	ã‚‘	wo	ã‚’
+kya	ãã‚ƒ	kyi	ããƒ	kyu	ãã‚…	kye	ãã‡	kyo	ãã‚‡
+gya	ãŽã‚ƒ	gyi	ãŽãƒ	gyu	ãŽã‚…	gye	ãŽã‡	gyo	ãŽã‚‡
+sha	ã—ã‚ƒ	shi	ã—	shu	ã—ã‚…	she	ã—ã‡	sho	ã—ã‚‡
+sya	ã—ã‚ƒ	syi	ã—ãƒ	syu	ã—ã‚…	sye	ã—ã‡	syo	ã—ã‚‡
+zya	ã˜ã‚ƒ	zyi	ã˜ãƒ	zyu	ã˜ã‚…	zye	ã˜ã‡	zyo	ã˜ã‚‡
+ja	ã˜ã‚ƒ	ji	ã˜	ju	ã˜ã‚…	je	ã˜ã‡	jo	ã˜ã‚‡
+jya	ã˜ã‚ƒ	jyi	ã˜ãƒ	jyu	ã˜ã‚…	jye	ã˜ã‡	jyo	ã˜ã‚‡
+tya	ã¡ã‚ƒ	tyi	ã¡ãƒ	tyu	ã¡ã‚…	tye	ã¡ã‡	tyo	ã¡ã‚‡
+cha	ã¡ã‚ƒ	chi	ã¡	chu	ã¡ã‚…	che	ã¡ã‡	cho	ã¡ã‚‡
+dya	ã¢ã‚ƒ	dyi	ã¢ãƒ	dyu	ã¢ã‚…	dye	ã¢ã‡	dyo	ã¢ã‚‡
+tha	ã¦ã‚ƒ	thi	ã¦ãƒ	thu	ã¦ã‚…	the	ã¦ã‡	tho	ã¦ã‚‡
+dha	ã§ã‚ƒ	dhi	ã§ãƒ	dhu	ã§ã‚…	dhe	ã§ã‡	dho	ã§ã‚‡
+nya	ã«ã‚ƒ	nyi	ã«ãƒ	nyu	ã«ã‚…	nye	ã«ã‡	nyo	ã«ã‚‡
+hya	ã²ã‚ƒ	hyi	ã²ãƒ	hyu	ã²ã‚…	hye	ã²ã‡	hyo	ã²ã‚‡
+pya	ã´ã‚ƒ	pyi	ã´ãƒ	pyu	ã´ã‚…	pye	ã´ã‡	pyo	ã´ã‚‡
+bya	ã³ã‚ƒ	byi	ã³ãƒ	byu	ã³ã‚…	bye	ã³ã‡	byo	ã³ã‚‡
+mya	ã¿ã‚ƒ	myi	ã¿ãƒ	myu	ã¿ã‚…	mye	ã¿ã‡	myo	ã¿ã‚‡
+rya	ã‚Šã‚ƒ	ryi	ã‚Šãƒ	ryu	ã‚Šã‚…	rye	ã‚Šã‡	ryo	ã‚Šã‚‡
+va	ã‚”ã	vi	ã‚”ãƒ	vu	ã‚”	ve	ã‚”ã‡	vo	ã‚”ã‰
+xa	ã	xi	ãƒ	xu	ã…	xe	ã‡	xo	ã‰
+xwa	ã‚Ž	xtsu	ã£	xtu	ã£
+xya	ã‚ƒ			xyu	ã‚…			xyo	ã‚‡
+n'	ã‚“	n	ã‚“
+-	ãƒ¼
+);
+
+my $consonants = 'ckgszjtdhfpbmyrw';
+for ($consonants =~ /./g) { $romkan{"$_$_"} = $romkan{'xtsu'}; }
+for (0..9, "'") { $romkan{$_} = $_; }
+
+our $sub_romkan;
+my $i = 0;
+my @@rom = grep(++$i % 2, @@romkan);
+
+;;; eval($sub_romkan = q%
+sub main::romkan {
+    local($_) = shift;
+    my($code, $katakana) = @@_;
+    my $kana = '';
+    while (length($_)) {
+	if (0
+% .	    join('', map("\t    || s/^($_)//i\n", @@rom)) . q%
+	    || s/^([\d\'])//
+	    || s/^(([%.$consonants.q%])\2)/$2/i
+	) {
+	    $kana .= $romkan{lc($1)};
+	} else {
+	    last;
+	}
+    }
+    return undef if length($_);
+    $kana =~ tr/ã-ã‚“ã‚”/ã‚¡-ãƒ³ãƒ´/ if $katakana;
+    $kana;
+}
+%);
+
+use Carp;
+croak $@@ if $@@;
+
+;######################################################################
+if (__FILE__ eq $0) {	# test main
+    package main;
+    use Getopt::Long;
+    Getopt::Long::Configure("bundling");
+    my $opt_debug = 0;
+    my $opt_echo  = 0;
+    my $opt_mode  = "line";
+    my $opt_kana  = "hira";
+    my $opt_ocode = "utf8";
+    my $command = $0 =~ /([^\/]+)$/ ? $1 : $0;
+    GetOptions("debug"   => \$opt_debug,
+	       "echo!"   => \$opt_echo,
+	       "mode=s"  => \$opt_mode,
+	       "kana=s"  => \$opt_kana,
+	       "ocode=s" => \$opt_ocode,
+	      )
+	|| die <<EOS;
+Usage: $command --[no]echo --mode=line|block --kana=hira|kata
+EOS
+    binmode STDOUT, ":$opt_ocode";
+    print $romkan::sub_romkan if $opt_debug;
+    $/ = '' if $opt_mode eq "block";
+    my $kana = $opt_kana eq "kata";
+    while (<>) {
+	print if $opt_echo;
+	s/(\w[\w\-\']*)/&romkan($1,undef,$kana)||$1/ge;
+	print;
+    }
+}
+;######################################################################
+
+1;
+@
+
+
+2.3
+log
+@Use -CSDA runtime option.
+@
+text
+@d1 1
+a1 1
+#!/usr/bin/perl -s -CSDA
+d14 1
+a14 1
+;; my $rcsid = q$Id: romkan.pl,v 2.2 2011/12/23 01:13:17 utashiro Exp utashiro $;
+d71 1
+d86 1
+d130 21
+a150 4
+    our($debug, $katakana);
+    binmode STDOUT, ':utf8';
+    print $romkan::sub_romkan if $debug;
+    $/ = '' unless -t STDIN;
+d152 2
+a153 2
+	print unless -t STDIN;
+	s/([\w\-\']+)/&romkan($1,undef,$katakana)||$1/ge;
+@
+
+
+2.2
+log
+@Put -Cio option for runtime.
+@
+text
+@d1 1
+a1 1
+#!/usr/bin/perl -s -Cio
+d14 1
+a14 1
+;; my $rcsid = q$Id: romkan.pl,v 2.1 2011/12/22 06:48:55 utashiro Exp utashiro $;
+@
+
+
+2.1
+log
+@romkan.pl unicode version.
+@
+text
+@d1 1
+a1 1
+#!/usr/bin/perl -s
+d14 1
+a14 1
+;; my $rcsid = q$Id: romkan.pl,v 1.9 2001/06/25 11:09:01 utashiro Exp utashiro $;
+@
+
+
+1.9
+log
+@$1 is initialized in the loop in 5.005_03 or 5.6 - fixed by mr.ohzaki.
+fixed bug in consonants treatment.
+@
+text
+@d1 5
+a5 1
+#!/usr/local/bin/perl -s
+d11 1
+a11 6
+;# Copyright (c) 2001 Kazumasa Utashiro <utashiro@@srekcah.org>
+;# Copyright (c) 1995,1996,1998,1999 Kazumasa Utashiro
+;# Internet Initiative Japan Inc.
+;#
+;# Copyright (c) 1993 Kazumasa Utashiro
+;# Software Research Associates, Inc.
+d14 1
+a14 1
+;; $rcsid = q$Id: romkan.pl,v 1.8 1999/12/03 11:33:46 utashiro Exp $;
+d20 1
+a20 1
+;#	$kana = &romkan($roma [, CODE [, KATAKANA]] );
+d27 2
+a28 2
+;#	Second argument specifies the encoding of return string.  It
+;#	is encoded in 'euc' by default.  Use 'euc', 'sjis' or 'jis'.
+d47 1
+a47 1
+require('jcode.pl');
+d49 42
+a90 1
+$pcode = 'euc';
+d92 1
+a92 45
+$romkan_table = <<'__TABLE_END__' unless $romkan_table;
+a	¤¢	i	¤¤	u	¤¦	e	¤¨	o	¤ª
+ka	¤«	ki	¤­	ku	¤¯	ke	¤±	ko	¤³
+ga	¤¬	gi	¤®	gu	¤°	ge	¤²	go	¤´
+sa	¤µ	si	¤·	su	¤¹	se	¤»	so	¤½
+za	¤¶	zi	¤¸	zu	¤º	ze	¤¼	zo	¤¾
+ta	¤¿	ti	¤Á	tu	¤Ä	te	¤Æ	to	¤È
+tsa	¤Ä¤¡	tsi	¤Ä¤£	tsu	¤Ä	tse	¤Ä¤§	tso	¤Ä¤©
+da	¤À	di	¤Â	du	¤Å	de	¤Ç	do	¤É
+na	¤Ê	ni	¤Ë	nu	¤Ì	ne	¤Í	no	¤Î
+ha	¤Ï	hi	¤Ò	hu	¤Õ	he	¤Ø	ho	¤Û
+fa	¤Õ¤¡	fi	¤Õ¤£	fu	¤Õ	fe	¤Õ¤§	fo	¤Õ¤©
+pa	¤Ñ	pi	¤Ô	pu	¤×	pe	¤Ú	po	¤Ý
+ba	¤Ð	bi	¤Ó	bu	¤Ö	be	¤Ù	bo	¤Ü
+ma	¤Þ	mi	¤ß	mu	¤à	me	¤á	mo	¤â
+ya	¤ä			yu	¤æ			yo	¤è
+ra	¤é	ri	¤ê	ru	¤ë	re	¤ì	ro	¤í
+wa	¤ï	wi	¤ð			we	¤ñ	wo	¤ò
+kya	¤­¤ã	kyi	¤­¤£	kyu	¤­¤å	kye	¤­¤§	kyo	¤­¤ç
+gya	¤®¤ã	gyi	¤®¤£	gyu	¤®¤å	gye	¤®¤§	gyo	¤®¤ç
+sha	¤·¤ã	shi	¤·	shu	¤·¤å	she	¤·¤§	sho	¤·¤ç
+zya	¤¸¤ã	zyi	¤¸¤£	zyu	¤¸¤å	zye	¤¸¤§	zyo	¤¸¤ç
+ja	¤¸¤ã	ji	¤¸	ju	¤¸¤å	je	¤¸¤§	jo	¤¸¤ç
+jya	¤¸¤ã	jyi	¤¸¤£	jyu	¤¸¤å	jye	¤¸¤§	jyo	¤¸¤ç
+tya	¤Á¤ã	tyi	¤Á¤£	tyu	¤Á¤å	tye	¤Á¤§	tyo	¤Á¤ç
+cha	¤Á¤ã	chi	¤Á	chu	¤Á¤å	che	¤Á¤§	cho	¤Á¤ç
+dya	¤Â¤ã	dyi	¤Â¤£	dyu	¤Â¤å	dye	¤Â¤§	dyo	¤Â¤ç
+tha	¤Æ¤ã	thi	¤Æ¤£	thu	¤Æ¤å	the	¤Æ¤§	tho	¤Æ¤ç
+dha	¤Ç¤ã	dhi	¤Ç¤£	dhu	¤Ç¤å	dhe	¤Ç¤§	dho	¤Ç¤ç
+nya	¤Ë¤ã	nyi	¤Ë¤£	nyu	¤Ë¤å	nye	¤Ë¤§	nyo	¤Ë¤ç
+hya	¤Ò¤ã	hyi	¤Ò¤£	hyu	¤Ò¤å	hye	¤Ò¤§	hyo	¤Ò¤ç
+pya	¤Ô¤ã	pyi	¤Ô¤£	pyu	¤Ô¤å	pye	¤Ô¤§	pyo	¤Ô¤ç
+bya	¤Ó¤ã	byi	¤Ó¤£	byu	¤Ó¤å	bye	¤Ó¤§	byo	¤Ó¤ç
+mya	¤ß¤ã	myi	¤ß¤£	myu	¤ß¤å	mye	¤ß¤§	myo	¤ß¤ç
+rya	¤ê¤ã	ryi	¤ê¤£	ryu	¤ê¤å	rye	¤ê¤§	ryo	¤ê¤ç
+xa	¤¡	xi	¤£	xu	¤¥	xe	¤§	xo	¤©
+xwa	¤î	xtsu	¤Ã	xtu	¤Ã
+xya	¤ã			xyu	¤å			xyo	¤ç
+n'	¤ó	n	¤ó
+-	¡¼
+__TABLE_END__
+
+&jcode'convert(*romkan_table, $pcode);
+%romkan = @@romkan = split(/\s+/, $romkan_table);
+$consonants = 'ckgszjtdhfpbmyrw';
+d96 4
+a99 1
+$i = 0;
+d101 5
+a105 4
+sub main'romkan {
+    local($_, $code, $katakana) = @@_;
+    local($kana) = '';
+    while (length) {
+d107 1
+a107 1
+% .	join('', grep(++$i%2 && ($_ = "\t    || s/^($_)//i\n"), @@romkan)) . q%
+d111 1
+a111 1
+	    $kana .= $romkan{"\L$1"};
+d116 2
+a117 3
+    return undef if length;
+    $kana =~ s/\244(.)/\245$1/g if $katakana;
+    &jcode'convert(*kana, $code, $pcode) if $code && $code ne $pcode;
+d122 3
+d128 3
+a130 3
+
+    print $romkan'sub_romkan if $debug;
+
+a131 2
+    $code = $jis ? 'jis' : $euc ? 'euc' : $sjis ? 'sjis' : undef;
+
+d134 1
+a134 1
+	s/([\w\-\']+)/&romkan($1,$code,$katakana)||$1/ge;
+@
+
+
+1.8
+log
+@banished the use of $&
+fixed illegal use of \1 for substitute string
+@
+text
+@d7 2
+a8 1
+;# Copyright (c) 1995,1996,1998,1999 Kazumasa Utashiro <utashiro@@iij.ad.jp>
+d15 1
+a15 1
+;; $rcsid = q$Id: romkan.pl,v 1.7 1998/04/23 12:13:56 utashiro Exp utashiro $;
+d106 9
+a114 6
+% .	join('', grep(++$i%2 && ($_ = "\tnext if s/^($_)//i;\n"), @@romkan)) . q%
+	next if s/^([\d\'])//;
+	next if s/^([%.$consonants.q%])\1/$1/i;
+	last;
+    } continue {
+	$kana .= $romkan{"\L$1"};
+@
+
+
+1.7
+log
+@Added -jis, -euc, -sjis option
+Added -katakana option
+@
+text
+@d7 1
+a7 1
+;# Copyright (c) 1995,1996,1998 Kazumasa Utashiro <utashiro@@iij.ad.jp>
+d14 1
+a14 1
+;; $rcsid = q$Id: romkan.pl,v 1.6 1996/05/22 15:41:28 utashiro Exp utashiro $;
+d41 1
+a41 1
+;#	    s/[\w\-\']+/&romkan($&)||$&/ge unless 1 .. /^$/;
+d99 1
+d105 3
+a107 3
+% .	join('', grep(++$i%2 && ($_ = "\tnext if s/^$_//i;\n"), @@romkan)) . q%
+	next if s/^[\d\']//;
+	next if s/^([%.$consonants.q%])\1/\1/i;
+d110 1
+a110 1
+	$kana .= $romkan{"\L$&"};
+d130 1
+a130 1
+	s/[\w\-\']+/&romkan($&,$code,$katakana)||$&/ge;
+@
+
+
+1.6
+log
+@add some readings.
+@
+text
+@d7 1
+a7 1
+;# Copyright (c) 1995,1996 Kazumasa Utashiro <utashiro@@iij.ad.jp>
+d11 1
+a11 1
+;# Software Research Associates, Inc., Japan
+d14 1
+a14 1
+;; $rcsid = q$Id: romkan.pl,v 1.5 1996/05/22 04:18:21 utashiro Exp utashiro $;
+d122 2
+a123 1
+    print $romkan'sub_romkan if $debug; #''
+d125 2
+d129 1
+a129 1
+	s/[\w\-\']+/&romkan($&)||$&/ge;
+@
+
+
+1.5
+log
+@Handle single quote.
+@
+text
+@d14 1
+a14 1
+;; $rcsid = q$Id: romkan.pl,v 1.4 1993/05/03 16:28:13 utashiro Exp utashiro $;
+d58 1
+a58 1
+				tsu	¤Ä
+d69 2
+a70 2
+kya	¤­¤ã			kyu	¤­¤å	kye	¤­¤§	kyo	¤­¤ç
+gya	¤®¤ã			gyu	¤®¤å	gye	¤®¤§	gyo	¤®¤ç
+d72 1
+a72 1
+zya	¤¸¤ã			zyu	¤¸¤å	zye	¤¸¤§	zyo	¤¸¤ç
+d74 2
+a75 2
+jya	¤¸¤ã			jyu	¤¸¤å	jye	¤¸¤§	jyo	¤¸¤ç
+tya	¤Á¤ã	thi	¤Æ¤£	tyu	¤Á¤å	tye	¤Á¤§	tyo	¤Á¤ç
+d77 9
+a85 7
+dya	¤Â¤ã	dhi	¤Ç¤£	dyu	¤Â¤å	dye	¤Â¤§	dyo	¤Â¤ç
+nya	¤Ë¤ã			nyu	¤Ë¤å	nye	¤Ë¤§	nyo	¤Ë¤ç
+hya	¤Ò¤ã			hyu	¤Ò¤å	hye	¤Ò¤§	hyo	¤Ò¤ç
+pya	¤Ô¤ã			pyu	¤Ô¤å	pye	¤Ô¤§	pyo	¤Ô¤ç
+bya	¤Ó¤ã			byu	¤Ó¤å	bye	¤Ó¤§	byo	¤Ó¤ç
+mya	¤ß¤ã			myu	¤ß¤å	mye	¤ß¤§	myo	¤ß¤ç
+rya	¤ê¤ã			ryu	¤ê¤å	rye	¤ê¤§	ryo	¤ê¤ç
+@
+
+
+1.4
+log
+@put package romkan on the top.
+@
+text
+@d7 4
+a10 1
+;# Copyright (c) 1993 Kazumasa Utashiro <utashiro@@sra.co.jp>
+d14 1
+a14 1
+;; $rcsid = q$Id: romkan.pl,v 1.3 1993/05/03 16:24:37 utashiro Exp utashiro $;
+d41 1
+a41 1
+;#	    s/[\w\-]+/&romkan($&)||$&/ge unless 1 .. /^$/;
+d95 1
+a95 1
+for (0..9) { $romkan{$_} = $_; }
+d103 1
+a103 1
+	next if s/^\d//;
+d124 1
+a124 1
+	s/[\w\-]+/&romkan($&)||$&/ge;
+@
+
+
+1.3
+log
+@Process line-by-line when input is tty.
+@
+text
+@d2 1
+d11 1
+a11 1
+;; $rcsid = q$Id: romkan.pl,v 1.2 1993/02/17 06:03:22 utashiro Exp utashiro $;
+a43 2
+package romkan;
+
+@
+
+
+1.2
+log
+@Little Language version.
+@
+text
+@d4 1
+a4 1
+;# romkan.pl: roma-to-kana convertion subroutine for Perl
+d10 1
+a10 1
+;; $rcsid = q$Id: romkan.pl,v 1.1 1993/01/13 07:19:33 utashiro Exp utashiro $;
+d119 1
+a119 1
+    $/ = '';
+d121 1
+a121 1
+	print;
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+a1 1
+#!/usr/local/bin/perl
+d10 1
+a10 1
+;; $rcsid = q$Id$;
+d14 1
+a14 1
+;# INTERFACE
+d18 2
+d72 1
+d90 4
+a93 6
+%romkan = @@romkan = $romkan_table =~ /\S+/g;
+@@rom = grep(++$i % 2, @@romkan);
+
+for (@@rom) {
+    $translate .= "\t\$kana .= \$romkan{\"\\L\$&\"}, redo if s/^$_//i;\n";
+}
+d95 2
+a96 1
+$sub_romkan = q%sub main'romkan {
+d99 7
+a105 10
+    {
+	if ($_ eq '') {
+	    $kana =~ s/\244(.)/\245$1/g if $katakana;
+	    &jcode'convert(*kana, $code, $pcode) if $code && $code ne $pcode;
+	    return $kana;
+	}
+%	. $translate . q%
+	$kana .= $&, redo if s/^\d+//;
+	redo if s/^([kgszjtdhfpbmyrw])\1/xtu\1/i;
+	return undef;
+d107 4
+d112 1
+a112 5
+%;
+
+print $sub_romkan if $debug;
+
+eval $sub_romkan;
+d115 1
+a115 1
+if (__FILE__ eq $0) {
+d118 2
+d121 3
+a123 4
+	chop;
+	$hiragana = &romkan($_, 'jis');
+	$katakana = &romkan($_, 'jis', 1);
+	printf "%-20s %-28s %-28s\n", $_, $hiragana, $katakana;
+@
