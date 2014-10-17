@@ -1,4 +1,4 @@
-#!/usr/bin/perl -s -CSDA
+#!/usr/bin/perl -CSDA
 
 use warnings;
 use strict;
@@ -11,7 +11,7 @@ package romkan;
 ;# Copyright (c) Kazumasa Utashiro
 ;#
 ;# Original: Jan 12 1993
-;; my $rcsid = q$Id: romkan.pl,v 2.3 2011/12/23 01:48:41 utashiro Exp $;
+;; my $rcsid = q$Id: romkan.pl,v 2.4 2014/10/17 02:17:52 utashiro Exp $;
 ;#
 ;######################################################################
 ;#
@@ -127,13 +127,30 @@ croak $@ if $@;
 ;######################################################################
 if (__FILE__ eq $0) {	# test main
     package main;
-    our($debug, $katakana);
-    binmode STDOUT, ':utf8';
-    print $romkan::sub_romkan if $debug;
-    $/ = '' unless -t STDIN;
+    use Getopt::Long;
+    Getopt::Long::Configure("bundling");
+    my $opt_debug = 0;
+    my $opt_echo  = 0;
+    my $opt_mode  = "line";
+    my $opt_kana  = "hira";
+    my $opt_ocode = "utf8";
+    my $command = $0 =~ /([^\/]+)$/ ? $1 : $0;
+    GetOptions("debug"   => \$opt_debug,
+	       "echo!"   => \$opt_echo,
+	       "mode=s"  => \$opt_mode,
+	       "kana=s"  => \$opt_kana,
+	       "ocode=s" => \$opt_ocode,
+	      )
+	|| die <<EOS;
+Usage: $command --[no]echo --mode=line|block --kana=hira|kata
+EOS
+    binmode STDOUT, ":$opt_ocode";
+    print $romkan::sub_romkan if $opt_debug;
+    $/ = '' if $opt_mode eq "block";
+    my $kana = $opt_kana eq "kata";
     while (<>) {
-	print unless -t STDIN;
-	s/([\w\-\']+)/&romkan($1,undef,$katakana)||$1/ge;
+	print if $opt_echo;
+	s/(\w[\w\-\']*)/&romkan($1,undef,$kana)||$1/ge;
 	print;
     }
 }
