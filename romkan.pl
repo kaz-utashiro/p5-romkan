@@ -22,21 +22,20 @@ package romkan;
 ;# DESCRIPTION
 ;#
 ;#	Subroutine &romkan returns KANA string expressed by the first
-;#	argument.  It returns undef when translation was failed.
+;#	argument.  It returns undef if entire string cannot be
+;#	converted to KANA.
 ;#
-;#	Second argument is obsolete now.  It remains for backward
-;#	compatibility.  Put undef here when using third argument.
+;#	Second argument is obsolete now.  It remains just for backward
+;#	compatibility.
 ;#
-;#	If the third argument is supplied and its value is
-;#	true, return string is expressed by KATAKANA rather
-;#	than HIRAGANA which is default.  Use undef for
-;#	second argument if you don't want to specify the code.
+;#	If the third argument is supplied and its value is true,
+;#	return string is expressed by KATAKANA rather than HIRAGANA.
 ;#
 ;######################################################################
 ;#
 ;# SAMPLE:
 ;#
-;#	require('romkan.pl');
+;#	require 'romkan.pl';
 ;#	while (<>) {
 ;#	    s/([\w\-\']+)/&romkan($1)||$1/ge unless 1 .. /^$/;
 ;#	    print;
@@ -92,34 +91,32 @@ n'	ん	n	ん
 );
 
 my $consonants = 'ckgszjtdhfpbmyrw';
-for ($consonants =~ /./g) { $romkan{"$_$_"} = $romkan{'xtsu'}; }
-for (0..9, "'") { $romkan{$_} = $_; }
+map { $romkan{"$_$_"} = $romkan{'xtsu'} } $consonants =~ /./g;
+map { $romkan{$_} = $_ } 0..9, "'";
 
-our $sub_romkan;
-my $i = 0;
-my @rom = grep(++$i % 2, @romkan);
+my @rom = @romkan[ map { $_*2 } 0 .. (@romkan/2)-1 ];
+my $rom_pat = join '|', @rom, q/[\d\']/;
 
-;;; eval($sub_romkan = q%
+my $re_rom  = qr/$rom_pat/i;
+my $re_consonants = qr/[$consonants]/i;
+
 sub main::romkan {
-    local($_) = shift;
-    my($code, $katakana) = @_;
+    local $_ = shift;
+    my $dummy = shift;
+    my $katakana = shift;
+
     my $kana = '';
-    while (length($_)) {
-	if (0
-% .	    join('', map("\t    || s/^($_)//i\n", @rom)) . q%
-	    || s/^([\d\'])//
-	    || s/^(([%.$consonants.q%])\2)/$2/i
-	) {
-	    $kana .= $romkan{lc($1)};
-	} else {
-	    last;
-	}
+    while (length) {
+	s/^($re_rom)// || s/^(($re_consonants)\2)/$2/ || last;
+	$kana .= $romkan{ lc $1 };
     }
-    return undef if length($_);
+
+    return undef if length;
+
     $kana =~ tr/ぁ-んゔ/ァ-ンヴ/ if $katakana;
+
     $kana;
 }
-%);
 
 use Carp;
 croak $@ if $@;
